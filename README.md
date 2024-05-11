@@ -14,7 +14,7 @@ Given an egocentric video, Egoinstructor automatically retrieves semantically re
 
 
 <div align="center">
-<img src="assets/teaser.png" width="100%">
+<img src="assets/teaser.png" width="75%">
 </div>
 
 

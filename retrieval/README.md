@@ -11,7 +11,7 @@ Official Pytorch implementation for the crossview retrieval module in Egoinstruc
 The retrieval module is trained on pseudo paired egocentric videos (Ego4d) and exocentric videos (HowTo100M) using a EgoExoNCE loss. 
 
 <div align="center">
-<img src="../assets/retrieval.png" width="100%">
+<img src="../assets/retrieval.png" width="75%">
 </div>
 
 
