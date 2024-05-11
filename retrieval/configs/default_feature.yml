@@ -1,0 +1,136 @@
+data:
+  dataset: ego4d_howto100_feat
+  root: /path/to/your/ego4d_feature/
+  metadata: /path/to/your/ego4d_metadata.json
+  howto_root: /path/to/your/htm_feature/
+  howto_metadata: /path/to/your/htm_llama3_refined.json
+  
+  ### egoexonce ###
+  pair_num: 1
+
+  ### dataengine ###
+  clear_narration: true
+  expand_period: 10
+
+  ### longterm ###
+  ctx_length: 300  # 77
+  clip_length: 32 # 4
+
+  load_from: dir
+
+model:
+  name: CLIP_FEAT_LARGE_OPENAI
+  num_frames: ${data.clip_length}
+  project_embed_dim: 768
+
+  vision_transformer_width: 768
+  text_transformer_width: 768
+  ctx_length: ${data.ctx_length}
+
+  norm_embed: true
+  temperature_init: 0.07
+  freeze_temperature: false
+  freeze_text_encoder: false
+  
+train:
+  batch_size: 512
+  epochs: 5
+  warmup_epochs: 1
+  lr: 3e-5
+  fix_lr: true
+  lr_start: 1e-6
+  lr_end: 1e-5
+  clip_grad_type: norm   #[norm, value]
+  clip_grad_value: null
+  update_freq: 1
+  seed: 0
+  workers: 10
+
+  optimizer:
+    wd: 0.01
+    betas: [0.9, 0.999]
+    eps: 1e-8
+
+  eval_freq: 99
+  eval_in_middle_freq: -1
+  print_freq: 10
+  save_freq: 1
+  disable_amp: false
+  use_zero: false
+  use_checkpoint: false
+  use_half: false
+  find_unused_parameters: true
+
+test:
+  batch_size: 128
+  workers: 10
+  testonly: false
+  savemetaonly: false
+
+  ### shortterm benchmark ###
+  ek100_mir:
+    root: /path/to/your/ek100_feature/
+    metapath: ./metadata/
+    metadata: ${test.ek100_mir.metapath}EPIC_100_retrieval_test.csv
+    clip_length: ${data.clip_length}
+    ctx_length:  ${data.ctx_length}
+    load_from: dir
+
+  youcook:
+    root:  /path/to/your/youcook_feature/
+    metapath: ./metadata/
+    metadata: ${test.youcook.metapath}youcook_validation_clip.json
+    clip_length: ${data.clip_length}
+    ctx_length:  ${data.ctx_length}
+    load_from: dir
+
+  charades_egoexo:
+    ego_root: /path/to/your/charades_egovideo_features/
+    exo_root: /path/to/your/charades_exovideo_features/
+    metapath: ./metadata/
+    metadata: ${test.charades_egoexo.metapath}charades_video_retrieval.json
+    clip_length: ${data.clip_length}
+    load_from: dir
+
+  egolearn:
+    ego_root: /path/to/your/egolearn_egovideo_features/
+    exo_root: /path/to/your/egolearn_exovideo_features/
+    metapath: ./metadata/
+    metadata: ${test.egolearn.metapath}/egolearn_mcq_validation.json
+
+    clip_length: ${data.clip_length}
+    ctx_length:  ${data.ctx_length}
+    load_from: dir
+
+  egomcq:
+    root: /path/to/your/ego4d_features/
+    metapath: ./metadata/
+    # metadata: ${test.egomcq.metapath}egomcq.json
+    metadata: ${test.egomcq.metapath}egomcq.json
+    clip_length: ${data.clip_length} 
+    clear_narration: ${data.clear_narration}
+    load_from: ${data.load_from}
+
+  ########### longterm benchmark ############
+  youcook_video:
+    root: /path/to/your/youcook_feature/
+    metapath: ./metadata/
+    metadata: ${test.youcook.metapath}youcook_validation_video.json
+    clip_length: ${data.clip_length}
+    load_from: dir
+    ctx_length:  ${data.ctx_length}
+
+  egosumm:
+    root: /path/to/your/ego4d_feature/
+    metapath: ./metadata/
+    # metadata: ${test.egomcq.metapath}generated/ego4d_val_summarization_mcq.json
+    metadata: ${test.egomcq.metapath}ego4d_val_summarization_mcq.json
+    clip_length: ${data.clip_length}
+    clear_narration: ${data.clear_narration}
+    load_from: ${data.load_from}
+    ctx_length:  ${data.ctx_length}
+  
+wandb: false
+resume: null
+output: /path/to/your/exp_folder/
+local_rank: 0

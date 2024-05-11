@@ -1,0 +1,47 @@
+_base_: 'default_feature.yml'
+
+data:
+  dataset: ego4d_howto100_feat 
+  root: myphdd:s3://my_ego4d/videomae_L14_feature_fps8/
+  metadata: /mnt/petrelfs/xujilan/data/ego4d/generated/ego4d_train_nounverb_v3.json
+  howto_root: myphdd:s3://HT100M/internvideo_MM_L14/
+  howto_metadata: /mnt/petrelfs/xujilan/data/egohowto_pairdata/htm_llama3_refined.json
+
+  clear_narration: true
+  load_from: ceph
+
+model:
+  name: CLIP_FEAT_LARGE_OPENAI
+  num_frames: ${data.clip_length}
+  project_embed_dim: 768
+
+train:
+  batch_size: 128
+  epochs: 20
+
+test:
+  testonly: false
+  ek100_mir:
+    root: myphdd:s3://epic_kitchen/videomae_L14_feature_fps8/
+    load_from: ceph
+  youcook:
+    root: myphdd:s3://YouCook2/exo_internvideo_MM_L14_features/
+    load_from: ceph
+  charades_egoexo:
+    ego_root: myphdd:s3://charades_ego/videomae_L14_feature_fps8/
+    exo_root: myphdd:s3://charades_ego/internvideo_MM_L14_features/
+    load_from: ceph
+  egolearn:
+    ego_root: myphdd:s3://ourdata/videomae_L14_feature_fps8/
+    exo_root: myphdd:s3://ourdata/exo_internvideo_MM_L14_features/
+    load_from: ceph
+  egomcq:
+    root: myphdd:s3://my_ego4d/videomae_L14_feature_fps8/
+  youcook_video:
+    root: myphdd:s3://YouCook2/exo_internvideo_MM_L14_features/
+    load_from: ceph
+  egosumm:
+    root: myphdd:s3://my_ego4d/videomae_L14_feature_fps8/
+    
+resume: /mnt/petrelfs/xujilan/exps/egoexo/contrastive_pretrain/ego4d_flip_videomaev2_large_128x8_20ep/checkpoint_best.pt
+output: /mnt/petrelfs/xujilan/exps/egoinstructor/egoinstructor/

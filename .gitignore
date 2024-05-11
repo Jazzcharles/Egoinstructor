@@ -1,0 +1,5 @@
+retrieval/metadata/
+captioning/train.py
+captioning/test.py
+captioning/wandb/*
+
