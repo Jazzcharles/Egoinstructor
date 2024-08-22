@@ -46,8 +46,6 @@ from function.func_utils import build_train_loader, build_val_loader, build_opti
 from function.config import get_config
 from function.logger import get_logger
 
-from ipdb import set_trace
-
 def get_args_parser():
     parser = argparse.ArgumentParser(description='EgoInstructor training and evaluation', add_help=False)
     # Data
@@ -173,9 +171,9 @@ def main(args):
         # print('#' * 100)
 
         ### egolearn ego video-exo video retrieval ###
-        metrics = validate_v2v_mcq(egolearn_v2v_loader, model, use_half=False, cfg=cfg, args=args)
-        print(metrics)
-        print('#' * 100)
+        # metrics = validate_v2v_mcq(egolearn_v2v_loader, model, use_half=False, cfg=cfg, args=args)
+        # print(metrics)
+        # print('#' * 100)
         
         ### charades ego video-exo video retrieval ###
         R1_v2t, R5_v2t, R10_v2t, MeanR_v2t, MedianR_v2t, R1_t2v, R5_t2v, R10_t2v, MeanR_t2v, MedianR_t2v = validate_retrieval_zeroshot(charades_egoexo_loader, model, retrieval_type='v2v', args=args, cfg=cfg)
@@ -317,7 +315,6 @@ def train_one_epoch(train_loader, model, criterion, optimizer, scaler, epoch, lr
         # print('Noun vector: ', inputs['noun_vec'].shape)
         # print('Verb vector: ', inputs['verb_vec'].shape)
         # print(len(inputs['raw_caption']), inputs['raw_caption'])
-        # set_trace()
 
         ### keep part-of inputs ###
         video = inputs['video'].cuda(args.gpu)
@@ -401,7 +398,6 @@ def train_one_epoch(train_loader, model, criterion, optimizer, scaler, epoch, lr
                 train_iter_log_str = ''
                 for logk, logv in train_iter_log.items():
                     train_iter_log_str += f'{logk}:{logv}  '
-                #set_trace()
                 logger.info(train_iter_log_str)
 
             # progress.display(optim_iter)          

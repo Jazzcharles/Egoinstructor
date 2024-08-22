@@ -9,7 +9,6 @@ import random
 
 import pandas as pd
 import torch
-from ipdb import set_trace
 import cv2
 import io, os
 

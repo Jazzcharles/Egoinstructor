@@ -16,7 +16,7 @@ The retrieval module is trained on pseudo paired egocentric videos (Ego4d) and e
 
 
 
-## Preparing Pretrain data
+## Preparing Pretrain Data
 Please refer to [docs/data.md](docs/data.md).
 
 ## Training and Evaluation 
@@ -37,3 +37,9 @@ and run
 ```
 python main_pretrain_contrastive.py --config ./configs/test.yml
 ```
+
+### Pretrained Model 
+
+| Model | Link | Size |
+|-------------------------|--------|--------|
+| Crossview Retrieval Module | 🤗 [HF link](https://huggingface.co/Jazzcharles/EgoInstructor-ModelZoo/blob/main/retrieval_checkpoint_best.pt) | 1.83G

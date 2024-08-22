@@ -23,7 +23,8 @@ Given an egocentric video, Egoinstructor automatically retrieves semantically re
 - [x] Retrieval code and data released
 - [x] Captioning code and data released 
 - [ ] Online Demo
-- [ ] Pre-trained checkpoints
+- [x] Pre-trained retrieval checkpoints
+- [ ] Pre-trained captioning checkpoints
 
 ## Prepare environment
 Please refer to [env.md](./env.md)

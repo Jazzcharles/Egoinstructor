@@ -10,7 +10,6 @@ import random
 import decord
 import pandas as pd
 import torch
-from ipdb import set_trace
 from decord import cpu
 import cv2
 import io,os

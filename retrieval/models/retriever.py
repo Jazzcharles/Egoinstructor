@@ -6,7 +6,6 @@ import torch.nn as nn
 import torch.nn.functional as F
 import clip
 import io
-from ipdb import set_trace
 from function.func_utils import interpolate_clip_positional_embeds
 
 class CLIP_FEAT(nn.Module):

@@ -10,7 +10,6 @@ import torch
 import torch.distributed as dist
 import subprocess
 import sys
-from ipdb import set_trace
 
 def get_model(model):
     if isinstance(model, torch.nn.DataParallel) \

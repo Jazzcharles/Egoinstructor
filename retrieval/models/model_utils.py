@@ -9,7 +9,6 @@ from . import loss
 from .openai_model import QuickGELU, Transformer
 from collections import OrderedDict
 import functools
-from ipdb import set_trace
 
 def get_loss(model, args, cfg, tokenizer=None):
     return loss.EgoExoNCE(

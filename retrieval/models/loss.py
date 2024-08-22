@@ -13,7 +13,6 @@ import torch.nn as nn
 import torch.nn.functional as F
 
 from function.func_utils import gather_from_all
-from ipdb import set_trace
 
 class EgoExoNCE(nn.Module):
 

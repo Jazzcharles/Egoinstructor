@@ -216,7 +216,6 @@ def resume_checkpoint(cfg, model, optimizer, scaler, criterion):
             best_acc1 = latest_checkpoint['best_acc1']
             logger.info("=> loaded latest checkpoint '{}' (epoch {})"
                   .format(latest, latest_checkpoint['epoch']))
-            # set_trace()
     elif cfg.resume:
         if os.path.isfile(cfg.resume):
             logger.info("=> loading resume checkpoint '{}'".format(cfg.resume))
@@ -376,13 +375,13 @@ def build_val_loader(args, cfg, dataset_name='youcook', tokenizer=None):
         num_workers=cfg.test.workers, pin_memory=True, sampler=val_sampler, drop_last=False,
     )
     
-    #     for i in range(0, len(val_dataset), 1):
-    #         temp = val_dataset.__getitem__(i)
-    #         #print(i, temp['uid'], temp['start'], temp['end'], temp['raw_caption'])
-    #         # print(i, temp[0], temp[1], temp[2])
-    #         print(i)
-    #         print(temp[-2], temp[-1])
-    #         st()
+    # for i in range(0, len(val_dataset), 1):
+    #     temp = val_dataset.__getitem__(i)
+    #     #print(i, temp['uid'], temp['start'], temp['end'], temp['raw_caption'])
+    #     # print(i, temp[0], temp[1], temp[2])
+    #     print(i)
+    #     print(temp[-2], temp[-1])
+    #     breakpoint()
 
     print('{} ==> len(val_dataset)={},len(val_dataloader)={}'.format(dataset_name, len(val_dataset), len(dataloader)))
     return dataloader
