@@ -24,6 +24,13 @@ python main_feature_extraction.py \
 ```
 
 ### Exo video features 
+1. Clone the [InternVideo](https://github.com/OpenGVLab/InternVideo/tree/main) repo and copy InternVideo1 to ./models
+```
+git clone https://github.com/OpenGVLab/InternVideo.git
+cp -r InternVideo/InternVideo1 models/InternVideo
+```
+
+2. Extract exo-video features
 ```
 python main_feature_extraction.py \
     --model internvideo-ffmpeg \
