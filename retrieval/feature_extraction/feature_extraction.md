@@ -39,3 +39,5 @@ python main_feature_extraction.py \
 | VideoMAE-L (Ego) | 🤗 [HF link](https://huggingface.co/Jazzcharles/EgoInstructor-ModelZoo/resolve/main/videomae_L14_checkpoint_best.pth) | 5.1GB
 | InternVideo-L (Exo) | 🤗 [HF link](https://huggingface.co/OpenGVLab/InternVideo1.0/resolve/main/InternVideo-MM-L-14.ckpt) | 2.47GB
 
+### Acknowledgement
+This script is modified from [TAN](https://github.com/TengdaHan/TemporalAlignNet/tree/main/htm_zoo). Thanks for their great work.
