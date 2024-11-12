@@ -17,7 +17,7 @@ The retrieval module is trained on pseudo paired egocentric videos (Ego4d) and e
 
 
 ## Preparing Pretrain Data
-Please refer to [docs/data.md](docs/data.md).
+Please refer to [docs/data.md](docs/data.md). If you would like to extract the video features on your own, please refer to [feature_extraction/feature_extraction.md]
 
 ## Training and Evaluation 
 Training with slurm script
