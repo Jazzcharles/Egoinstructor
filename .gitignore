@@ -2,5 +2,9 @@ retrieval/metadata/
 captioning/train.py
 captioning/test.py
 captioning/wandb/*
+captioning/scripts/debug*.sh
+captioning/clip_visualization.py
+captioning/utils/clip_visualization.py
 retrieval/feature_extraction/*.sh
+retrieval/feature_extraction/models/InternVideo
 

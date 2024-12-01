@@ -361,10 +361,6 @@ def get_ego4d_dataset(args, image_processor, tokenizer, epoch=0, floor=False):
     if args.metapath != "":
         unified_dataset = EgoDataset(args)
 
-    # for i in range(10):
-    #     t = unified_dataset.__getitem__(i)
-    #     set_trace()
-
     if args.train_num_samples == -1:
         args.train_num_samples = len(unified_dataset)
 
@@ -373,18 +369,18 @@ def get_ego4d_dataset(args, image_processor, tokenizer, epoch=0, floor=False):
 
     num_samples = args.train_num_samples  # 8
     num_batches = round_fn(num_samples / global_batch_size)  # 2
-    um_samples = num_batches * global_batch_size  # 8
+    num_samples = num_batches * global_batch_size  # 8
 
     sampler = RandomSampler(unified_dataset, replacement=True, num_samples=num_samples)
     if args.distributed_type == "DEEPSPEED" or args.distributed_type == "MULTI_GPU":
-        sampler = DistributedProxySampler(sampler, num_replicas=args.world_size, rank=args.rank)
+        sampler = DistributedProxySampler(sampler, num_replicas=args.world_size, rank=args.rank)    
     dataloader = torch.utils.data.DataLoader(
         unified_dataset,
         sampler=sampler,
         batch_size=args.batch_size,
         num_workers=args.workers,
         pin_memory=True,
-        drop_last=True,
+        drop_last=True if not args.testonly else False,
         collate_fn=unified_dataset.collate,
     )
     return dataloader

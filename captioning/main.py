@@ -73,7 +73,7 @@ def parse_args():
     # TODO: Add help messages to clarify the purpose of each argument
 
     ### data
-    parser.add_argument("--external_save_dir", type=str, default=None, help="set to save model to external path",)
+    parser.add_argument("--external_save_dir", type=str, default='./checkpoints', help="set to save model to external path",)
     parser.add_argument("--run_name", type=str, default="otter-9b", help="used to name saving directory and wandb run",)
     parser.add_argument("--model_name", type=str, default="otter", choices=["otter", "flamingo", "idefics"], help="otters or flamingo",)
     parser.add_argument("--inst_format", type=str, default="simple", choices=["simple", "llama2", "idefics"], help="simple is for mpt/llama1, rest are in different instruction templates.",)
@@ -138,8 +138,8 @@ def parse_args():
     parser.add_argument('--clean_narration', default=False, action="store_true", help='whether delete #C C in egocaption',)
     parser.add_argument('--xview', default=False, action="store_true", help='whether use crossview data')
     parser.add_argument('--use_chat', default=False, action="store_true", help='whether use chat-data')
-    parser.add_argument('--max_shot', default=0,  type=int, help='whether use chat-data')
-    parser.add_argument('--max_num_frames', default=32, type=int, help='whether use chat-data')
+    parser.add_argument('--max_shot', default=0,  type=int, help='the maximum number of few shots')
+    parser.add_argument('--max_num_frames', default=32, type=int, help='the maximum number of frames')
     parser.add_argument('--load_from', default='dir', type=str, help='way to load data, dir or ceph')
     parser.add_argument('--save_predictions', action="store_true", help='whether to store the predictions')
 
@@ -459,19 +459,18 @@ def evaluation(accelerator, model, tokenizer, image_processor, ego_loaders, args
             hypothesis.extend(parsed_output)
 
             ### for debug ###
-            # print('Pred:', parsed_output)
-            # print('GT:', parsed_gt)
-            # print('Input:', query)
-            # print()
-            # set_trace()
-            # if i == 10:
-            #     break
+            # if args.rank == 0:
+            #     print('Pred:', parsed_output)
+            #     print('GT:', parsed_gt)
+            #     print('Input:', query)
+            #     breakpoint()
 
     accelerator.wait_for_everyone()    
 
     ### check the predictions ###    
     if args.save_predictions:
         with open('results.txt', 'w') as f:
+            f.write(f"Total length: {len(reference)} \n")
             for i in range(len(reference)):
                 f.write(str(i) + '\n')
                 f.write('GT: ' + '\t' + reference[i] + '\n')
@@ -503,7 +502,6 @@ def main():
 
     ### prepare data ###
     ego_loaders = get_data(args, image_processor, tokenizer, "ego4d")
-
     ### prepare optimizer ###
     optimizer, lr_scheduler = get_optimizer_and_lr_scheduler(args, ego_loaders, model)
 

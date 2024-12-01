@@ -1,0 +1,20 @@
+[
+    {
+        "ego_video": "./assets/test5199_ego.mp4",
+        "exo_video": [
+            {"path": "./assets/test5199_exo1.mp4", "caption":"you want to go ahead and open the microwave up but pop them in right there and center"},
+            {"path": "./assets/test5199_exo2.mp4", "caption":"so let's open the microwave here"},
+            {"path": "./assets/test5199_exo3.mp4", "caption":"alright so our concoction has finished cooking so we're going to go ahead and open our microwave"},
+            {"path": "./assets/test5199_exo4.mp4", "caption":"and then you open the microwave"}
+        ]
+    },
+    {
+        "ego_video": "./assets/test2895_ego.mp4",
+        "exo_video": [
+            {"path": "./assets/test2895_exo1.mp4", "caption":"now it's time to add all the flavor inside this dough"},
+            {"path": "./assets/test2895_exo2.mp4", "caption":"i'm just going to go ahead and add it in the dough and mix it up"},
+            {"path": "./assets/test2895_exo3.mp4", "caption":"alright so now we're gonna put our dough inside of it"},
+            {"path": "./assets/test2895_exo4.mp4", "caption":"now according to the tradition greek tradition we have to add an app to the center of the dough that symbolizes rebirth and plentifulness"}
+        ]
+    }
+]

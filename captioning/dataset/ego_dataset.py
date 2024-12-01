@@ -75,10 +75,25 @@ class EgoDataset(Dataset):
         self.use_chat = args.use_chat
         self.max_shot = args.max_shot
         self.load_from = args.load_from
-        self.chunk_len_ego = 300
-        self.chunk_len_exo = -1
-        self.fps_ego = 30
-        self.fps_exo = -1
+        
+        if '15s' in args.datapath_ego:
+            self.chunk_len_ego = 15
+            self.fps_ego = 30
+        else:
+            self.chunk_len_ego = 300
+            self.fps_ego = 30
+        
+        if '15s' in args.datapath_exo:
+            self.chunk_len_exo = 15
+            self.fps_exo = 25
+        else:
+            self.chunk_len_exo = -1
+            self.fps_exo = -1
+            
+        # self.chunk_len_ego = 300
+        # self.chunk_len_exo = -1
+        # self.fps_ego = 30
+        # self.fps_exo = -1
         
         print('$' * 100)
         print('Whether to use clean narration: ', self.clean_narration)
@@ -149,7 +164,7 @@ class EgoDataset(Dataset):
         video_id = sample['vid']
         start_sec = float(sample['start_second'])
         end_sec = float(sample['end_second'])
-        patch_images = video_loader(root, video_id, start_sec, end_sec,
+        patch_images = video_loader(self.client, root, video_id, start_sec, end_sec,
             chunk_len=chunk_len, fps=fps, clip_length=clip_length,
         )
         # F, H, W, C
@@ -296,13 +311,13 @@ class EgoDataset(Dataset):
                 ### load meta ###
                 cur_sample = self.dataset[cur_instruction_id]
 
-                ### load text first ###
-                cur_text = prepare_text(cur_instruction_id, is_last=False)
-                all_texts += cur_text
-
                 ### load videos ###
                 try:
                     exo_video = self.load_single_video(cur_sample, root=self.datapath_exo, chunk_len=self.chunk_len_exo, fps=self.fps_exo, clip_length=resample_frames)
+                    ### load text first ###
+                    cur_text = prepare_text(cur_instruction_id, is_last=False)    
+                    all_texts += cur_text
+                    
                     success_instruction_ids.append(cur_instruction_id)
                 except:
                     ### load current video failed, try next support sample ### 
@@ -332,7 +347,6 @@ class EgoDataset(Dataset):
 
                         selected_text = prepare_text(each_id, is_last=False)
                         all_texts += selected_text
-                
             context_images = torch.cat(in_context_images, dim=0)
             patch_images = torch.cat([context_images, query_image], dim=0)
 
@@ -358,7 +372,6 @@ class EgoDataset(Dataset):
 
 
     def process_image_text_pair(self, index):
-        # try:
         cur_train_id = self.train_data_list[index]
         
         (
@@ -405,7 +418,6 @@ class EgoDataset(Dataset):
         }
 
         return example
-
     def __str__(self):
         return f"type: {type(self)}, length: {len(self)}"
 
@@ -413,13 +425,13 @@ class EgoDataset(Dataset):
         return len(self.train_data_list)
 
     def __getitem__(self, index):
-        with random_seed(self.seed, self.epoch):
-            pair_sample = self.process_image_text_pair(index)
-            # if dataset is not supported
-            if pair_sample is None:
-                return self.__getitem__(index + 1)
-        return pair_sample
-
+        try:
+            return self.process_image_text_pair(index)
+        except:
+            new_idx = np.random.randint(0, len(self))
+            print(f'Loading {index} failed, switch to {new_idx}')
+            return self.__getitem__(new_idx)
+        
     def collate(self, samples):
         """Merge samples of different tasks to form two mini-batches.
         Args:

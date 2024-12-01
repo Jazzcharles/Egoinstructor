@@ -16,6 +16,24 @@ The retrieval-augmented captioning module is a video-conditioned LLM. It takes r
 <img src="../assets/captioning.png" width="100%">
 </div>
 
+## Inference 
+First download the checkpoint from huggingface
+
+| Model | Link | Size |
+|-------------------------|--------|--------|
+| Egoinstructor_captioner_4shot | 🤗 [HF link](https://huggingface.co/Jazzcharles/EgoInstructor-ModelZoo/blob/main/egoinstructor_captioner_4shot.pt) | 4.19G
+| Egoinstructor_captioner_2shot | 🤗 [HF link](https://huggingface.co/Jazzcharles/EgoInstructor-ModelZoo/blob/main/egoinstructor_captioner_2shot.pt) | 4.19G
+
+Then, prepare your in-context and test samples (videos and narrations), and save the video path and narrations into a json file, please refer to the format in [./assets/testdata.json](./assets/testdata.json), and run:
+
+```
+python test_video.py \
+    --testdata ./assets/testdata.json \
+    --pretrained_name_or_path="luodian/OTTER-MPT1B-RPJama-Init" \
+    --pretrained_checkpoint=egoinstructor_captioner_4shot.pt \
+    --max_shot=4 \
+```
+
 ## Preparing Training and Evaluation Data
 Please refer to [docs/data.md](docs/data.md).
 

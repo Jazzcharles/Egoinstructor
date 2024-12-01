@@ -36,111 +36,108 @@ class Permute(nn.Module):
         """
         return frames.permute(self.ordering)
 
-def get_vr(client, video_path):
-    if client is None:
-        vreader = decord.VideoReader(video_path, ctx=cpu(0))
-        
-    else:        
-        video_bytes = client.get(video_path, enable_stream=True)
-        assert video_bytes is not None, "Get video failed from {}".format(video_path)
-        video_path = video_bytes
-        if isinstance(video_path, bytes):
-            video_path = io.BytesIO(video_bytes)
-        vreader = decord.VideoReader(video_path, ctx=cpu(0))
-        
-    return vreader   
+def get_video_reader(client, videoname, num_threads, fast_rrc, rrc_params, fast_rcc, rcc_params):
+    video_reader = None
+    video_bytes = client.get(videoname)
+    assert video_bytes is not None, "Get video failed from {}".format(videoname)
+    videoname = video_bytes
     
-def video_loader(client, root, vid, second=None, end_second=None, chunk_len=300, fps=30, clip_length=32, jitter=False):
-    '''
-    args:
-        root: root directory of the video
-        vid: the unique vid of the video, e.g. hello.mp4 
-        second: the start second of the clip/video
-        end_second: the end second of the clip/video
-        chunk_len: whether the (long) video is chunked into several clips (e.g. 300-seconds clip)
-        fps: specify the decoding fps of the video
-        clip_length: the number of frames
-        jitter: True stands for random sampling, False means center sampling
-    return:
-        frames: torch tensor with shape: [T, H, W, C]
-    '''
-    ### get vr ###
-    if chunk_len == -1:
-        if not vid.endswith('.mp4') and not vid.endswith('.mkv') and not vid.endswith('webm'):
-            vid = vid + '.mp4'
-        vr = get_vr(client, osp.join(root, vid))
+    if isinstance(videoname, bytes):
+        videoname = io.BytesIO(video_bytes)
+        
+    video_reader = decord.VideoReader(videoname, num_threads=num_threads)
+    return video_reader
 
-        ### add a sanity check ###
-        second = min(second, len(vr) / vr.get_avg_fps())
-
-        second_offset = second
-        if end_second is not None:
-            end_second = min(end_second, len(vr) / vr.get_avg_fps())
-            ### add a sanity check ###
-            end_second = max(second + 1, end_second)
-        else:
-            end_second = len(vr) / vr.get_avg_fps()
-    else:
-        ### changed here to load chunked data ###
-        chunk_id = int(second) // chunk_len
-        chunk_start = chunk_id * chunk_len
-        second_offset = second - chunk_start
-        try:
-            vr = get_vr(client, osp.join(root, vid, '{}.mp4'.format(chunk_id)))
-        except:
-            vr = get_vr(client, osp.join(root, vid, '0.mp4'))
+def video_loader(client, root, vid, second, end_second, ext='mp4',
+                 chunk_len=300, fps=-1, clip_length=32,
+                 threads=1,
+                 fast_rrc=False, rrc_params=(224, (0.5, 1.0)),
+                 fast_rcc=False, rcc_params=(224, ),
+                 jitter=False):
+    # assert fps > 0, 'fps should be greater than 0'
     
-    fps = vr.get_avg_fps() if fps == -1 else fps
-
-    ### calculate frame_ids ###
-    frame_offset = int(np.round(second_offset * fps))
-    total_duration = max(int((end_second - second) * fps), clip_length)
-
     if chunk_len == -1:
-        if end_second <= second:
-            print("end_second should be greater than second for video:{} from {}-{}".format(vid, second, end_second))
-            
+        vr = get_video_reader(
+            client,
+            osp.join(root, '{}.{}'.format(vid, ext)),
+            num_threads=threads,
+            fast_rrc=fast_rrc, rrc_params=rrc_params,
+            fast_rcc=fast_rcc, rcc_params=rcc_params,
+        )
+        fps = vr.get_avg_fps() if fps == -1 else fps
+        
+        end_second = min(end_second, len(vr) / fps)
+
+        # calculate frame_ids
+        frame_offset = int(np.round(second * fps))
+        total_duration = max(int((end_second - second) * fps), clip_length)
         frame_ids = get_frame_ids(frame_offset, min(frame_offset + total_duration, len(vr)), num_segments=clip_length, jitter=jitter)
-    else:
-        frame_ids = get_frame_ids(frame_offset, frame_offset + total_duration, num_segments=clip_length, jitter=jitter)
-
-    ### add a sanity check for the frame indices ###
-    if max(frame_ids) >= len(vr):
-        print(f'Selecting video {vid} with frames larger than the end')
-        frame_ids = [min(x, len(vr) - 1) for x in frame_ids]
-
-    ### load frames ###
-    if max(frame_ids) < len(vr):
+        
+        # print(second, end_second, frame_ids)
+        
+        # load frames
+        assert max(frame_ids) < len(vr)
         try:
             frames = vr.get_batch(frame_ids).asnumpy()
         except decord.DECORDError as error:
             print(error)
             frames = vr.get_batch([0] * len(frame_ids)).asnumpy()
+    
+        return torch.from_numpy(frames.astype(np.float32))
+
     else:
-        # find the remaining frames in the next chunk
-        try:
-            frame_ids_part1 = list(filter(lambda frame_id: frame_id < len(vr), frame_ids))
-            frames_part1 = vr.get_batch(frame_ids_part1).asnumpy()
+        assert fps > 0, 'fps should be greater than 0'
+        
+        ## sanity check, for those who have start >= end ##
+        end_second = max(end_second, second + 1)
 
-            if os.path.exists(osp.join(root, vid, '{}.mp4'.format(chunk_id + 1))):
-                vr2 = get_vr(client, osp.join(root, vid, '{}.mp4'.format(chunk_id + 1)))
-            else:
-                vr2 = vr
+        chunk_start = int(second) // chunk_len * chunk_len
+        chunk_end = int(end_second) // chunk_len * chunk_len
+        
+        # print(f'Vid={vid}, begin_sec={second}, end_sec={end_second}, \t, st_frame={int(np.round(second * fps))}, ed_frame={int(np.round(end_second * fps))}')
+        # calculate frame_ids
+        frame_ids = get_frame_ids(
+            int(np.round(second * fps)),
+            int(np.round(end_second * fps)),
+            num_segments=clip_length, jitter=jitter
+        )
+        # print(f'Frames: {frame_ids}')
+        
+        all_frames = []
+        # allocate absolute frame-ids into the relative ones
+        for chunk in range(chunk_start, chunk_end + chunk_len, chunk_len):
+            # print(f'Chunk: {chunk}, \t, Rel_frame_ids={rel_frame_ids}')
+            vr = get_video_reader(
+                client,
+                # osp.join(root, '{}.{}'.format(vid, ext), '{}.{}'.format(chunk, ext)),
+                # osp.join(root, f'{vid}', f'{chunk // chunk_len}.{ext}'),
+                osp.join(root, vid, '{}.{}'.format(str(chunk // chunk_len).zfill(4), ext)),
+                num_threads=threads,
+                fast_rrc=fast_rrc, rrc_params=rrc_params,
+                fast_rcc=fast_rcc, rcc_params=rcc_params,
+            )
+
+            rel_frame_ids = list(filter(lambda x: int(chunk * fps) <= x < int((chunk + chunk_len) * fps), frame_ids))
+            # rel_frame_ids = [int(frame_id - chunk * fps) for frame_id in rel_frame_ids]
+            rel_frame_ids = [min(len(vr) - 1, int(frame_id - chunk * fps)) for frame_id in rel_frame_ids]
+
+            try:
+                frames = vr.get_batch(rel_frame_ids).asnumpy()
+            except decord.DECORDError as error:
+                # print(error)
+                frames = vr.get_batch([0] * len(rel_frame_ids)).asnumpy()
+            except IndexError:
+                print(root, vid, str(chunk // chunk_len).zfill(4), second, end_second)
+                print(len(vr), rel_frame_ids)
             
-            frame_ids_part2 = list(filter(lambda frame_id: frame_id >= len(vr), frame_ids))
-            frame_ids_part2 = [min(frame_id % len(vr), len(vr2) - 1) for frame_id in frame_ids_part2]
-            frames_part2 = vr2.get_batch(frame_ids_part2).asnumpy()
-            frames = np.concatenate([frames_part1, frames_part2], axis=0)
-
-        # the next chunk does not exist; the current chunk is the last one
-        except (RuntimeError, decord.DECORDError) as error:
-            print(error)
-            frame_ids = get_frame_ids(min(frame_offset, len(vr) - 1), len(vr), num_segments=clip_length, jitter=jitter)
-            frames = vr.get_batch(frame_ids).asnumpy()
-
-    frames = [torch.tensor(frame, dtype=torch.float32) for frame in frames]
-    return torch.stack(frames, dim=0)
-
+            all_frames.append(frames)
+            if sum(map(lambda x: x.shape[0], all_frames)) == clip_length:
+                break
+            
+        res = torch.from_numpy(np.concatenate(all_frames, axis=0).astype(np.float32))
+        assert res.shape[0] == clip_length, "{}, {}, {}, {}, {}, {}, {}".format(root, vid, second, end_second, res.shape[0], rel_frame_ids, frame_ids)
+        return res
+    
 def get_frame_ids(start_frame, end_frame, num_segments=32, jitter=True):
     '''
     args:
